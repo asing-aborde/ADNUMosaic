@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdNU Mosaic</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --navy: #1a2e5a; --navy-dark: #0f1d3d; --navy-light: #243670;
+    --gold: #f5c842; --gold-dark: #d4a900; --gold-light: #fde97a;
+    --white: #ffffff; --off-white: #f8f7f4;
+    --gray-100: #f0eff0; --gray-200: #e0dee0; --gray-400: #9e9c9e;
+    --gray-600: #5c5a5c; --gray-800: #2c2a2c;
+    --success: #1a7a4a; --danger: #b83232;
+    --danger-bg: #fdf0f0; --success-bg: #f0faf4;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--off-white); color: var(--gray-800); min-height: 100vh; }
+  nav { background: var(--navy-dark); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.25rem; color: var(--gold); }
+  .nav-logo span { color: var(--white); font-weight: 300; }
+  nav .nav-links { display: flex; gap: 0.25rem; }
+  .nav-btn { background: none; border: none; color: rgba(255,255,255,0.65); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 500; transition: background 0.15s, color 0.15s; }
+  .nav-btn:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+  .nav-btn.active { background: rgba(245,200,66,0.15); color: var(--gold); }
+  .page { display: none; min-height: calc(100vh - 56px); }
+  .page.active { display: block; }
+  .auth-page { display: none; min-height: calc(100vh - 56px); background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-light) 100%); align-items: center; justify-content: center; padding: 2rem 1rem; }
+  .auth-page.active { display: flex; }
+  .auth-card { background: var(--white); border-radius: 18px; width: 100%; max-width: 420px; overflow: hidden; box-shadow: 0 20px 60px rgba(10,18,40,0.35); }
+  .auth-header { background: var(--navy); padding: 2.25rem 2rem 2rem; text-align: center; position: relative; }
+  .auth-header::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--gold); }
+  .auth-logo-circle { width: 56px; height: 56px; background: var(--gold); border-radius: 50%; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--navy-dark); font-weight: 700; }
+  .auth-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--white); }
+  .auth-title em { color: var(--gold); font-style: normal; }
+  .auth-subtitle { font-size: 0.8rem; color: rgba(255,255,255,0.55); margin-top: 0.25rem; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 300; }
+  .tab-switcher { display: flex; border-bottom: 1.5px solid var(--gray-200); }
+  .tab-btn { flex: 1; background: none; border: none; padding: 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; color: var(--gray-400); cursor: pointer; border-bottom: 2.5px solid transparent; margin-bottom: -1.5px; transition: color 0.15s, border-color 0.15s; }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--gold); }
+  .auth-form-wrap { padding: 1.75rem 2rem 2rem; }
+  .form-group { margin-bottom: 1.1rem; }
+  .form-group label { display: block; font-size: 0.78rem; font-weight: 600; color: var(--gray-600); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .form-group input, .form-group select { width: 100%; padding: 10px 13px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--gray-800); background: var(--white); outline: none; transition: border-color 0.15s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--navy-light); }
+  .form-group input.error { border-color: var(--danger); }
+  .field-error { font-size: 0.75rem; color: var(--danger); margin-top: 0.3rem; display: none; }
+  .field-error.show { display: block; }
+  .alert { padding: 10px 13px; border-radius: 9px; font-size: 0.85rem; margin-bottom: 1rem; display: none; }
+  .alert.show { display: block; }
+  .alert.danger { background: var(--danger-bg); color: var(--danger); border: 1px solid #f5c6c6; }
+  .alert.success { background: var(--success-bg); color: var(--success); border: 1px solid #a8dfc0; }
+  .btn-primary { width: 100%; background: var(--navy); color: var(--white); border: none; border-radius: 10px; padding: 12px; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem; transition: background 0.15s, transform 0.1s; }
+  .btn-primary:hover { background: var(--navy-light); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-primary.gold { background: var(--gold); color: var(--navy-dark); }
+  .btn-primary.gold:hover { background: var(--gold-dark); color: var(--white); }
+  .auth-switch { text-align: center; margin-top: 1.1rem; font-size: 0.82rem; color: var(--gray-400); }
+  .auth-switch a { color: var(--navy); font-weight: 600; cursor: pointer; text-decoration: none; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .pins-page { padding: 2rem; max-width: 1100px; margin: 0 auto; }
+  .pins-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem; }
+  .pins-header h1 { font-family: 'Playfair Display', serif; font-size: 1.85rem; color: var(--navy-dark); }
+  .pins-header h1 span { color: var(--gold-dark); }
+  .pins-header p { font-size: 0.875rem; color: var(--gray-400); margin-top: 0.2rem; }
+  .pins-controls { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1.5rem; align-items: center; }
+  .search-wrap { position: relative; flex: 1; min-width: 200px; }
+  .search-wrap svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--gray-400); }
+  .search-wrap input { width: 100%; padding: 9px 12px 9px 38px; border: 1.5px solid var(--gray-200); border-radius: 9px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; outline: none; background: var(--white); }
+  .db-note { background: var(--navy-dark); color: rgba(255,255,255,0.75); font-size: 0.78rem; border-radius: 8px; padding: 10px 14px; margin-bottom: 1.5rem; display: flex; align-items: flex-start; gap: 8px; line-height: 1.55; }
+  .db-note strong { color: var(--gold); }
+  .stats-bar { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .stat-pill { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 20px; padding: 5px 14px; font-size: 0.8rem; color: var(--gray-600); font-weight: 500; }
+  .stat-pill strong { color: var(--navy); }
+  .pins-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.25rem; }
+  .pin-card { background: var(--white); border: 1.5px solid var(--gray-200); border-radius: 14px; overflow: hidden; transition: transform 0.15s, box-shadow 0.15s; cursor: pointer; }
+  .pin-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(26,46,90,0.1); }
+  .pin-img { height: 140px; background: var(--navy); position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+  .pin-img svg { opacity: 0.2; }
+  .pin-img .pin-loc-badge { position: absolute; bottom: 10px; left: 12px; background: rgba(10,18,40,0.75); color: var(--gold-light); font-size: 0.72rem; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .pin-visibility { position: absolute; top: 10px; right: 12px; font-size: 0.68rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; text-transform: uppercase; }
+  .pin-visibility.public { background: rgba(26,122,74,0.85); color: #d0fce9; }
+  .pin-body { padding: 1rem 1.1rem; }
+  .pin-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 0.5rem; }
+  .pin-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--navy-light); color: var(--white); font-size: 0.65rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pin-author { font-size: 0.8rem; font-weight: 600; color: var(--gray-600); }
+  .pin-date { font-size: 0.75rem; color: var(--gray-400); margin-left: auto; }
+  .pin-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--navy-dark); margin-bottom: 0.4rem; line-height: 1.35; }
+  .pin-story { font-size: 0.83rem; color: var(--gray-600); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .pin-footer { padding: 0.65rem 1.1rem; border-top: 1px solid var(--gray-100); display: flex; align-items: center; gap: 0.5rem; }
+  .category-tag { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
+  .tag-campus { background: #f5e8f8; color: #6a1a8a; }
+  .no-results { grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: var(--gray-400); }
+  .loading-overlay { position: fixed; inset: 0; background: var(--navy-dark); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.25rem; transition: opacity 0.4s; }
+  .loading-overlay.hidden { opacity: 0; pointer-events: none; }
+  .loading-logo { font-family: 'Playfair Display', serif; font-size: 2.2rem; color: var(--gold); }
+  .loading-logo span { color: rgba(255,255,255,0.5); }
+  .loading-bar { width: 160px; height: 2px; background: rgba(255,255,255,0.12); border-radius: 2px; overflow: hidden; }
+  .loading-bar-fill { height: 100%; background: var(--gold); border-radius: 2px; animation: loadBar 1.2s ease forwards; }
+  @keyframes loadBar { from { width: 0 } to { width: 100% } }
+  .loading-text { font-size: 0.78rem; color: rgba(255,255,255,0.4); letter-spacing: 0.1em; text-transform: uppercase; }
+  .pin-img.bg-1 { background: linear-gradient(135deg, #1a2e5a 0%, #243670 100%); }
+  .pin-img.bg-2 { background: linear-gradient(135deg, #2d1a5a 0%, #4a2d7a 100%); }
+  .pin-img.bg-3 { background: linear-gradient(135deg, #1a4a2e 0%, #2d7a4a 100%); }
+  .pin-img.bg-4 { background: linear-gradient(135deg, #5a1a1a 0%, #7a2d2d 100%); }
+  .pin-img.bg-5 { background: linear-gradient(135deg, #1a4a5a 0%, #2d6a7a 100%); }
+  .pin-img.bg-6 { background: linear-gradient(135deg, #4a3a1a 0%, #7a5a2d 100%); }
+  @media (max-width: 600px) { .pins-page { padding: 1.25rem; } .form-row { grid-template-columns: 1fr; } .auth-form-wrap { padding: 1.5rem 1.25rem 1.75rem; } }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div class="loading-overlay" id="loader">
+  <div class="loading-logo">AdNU <span>Mosaic</span></div>
+  <div class="loading-bar"><div class="loading-bar-fill"></div></div>
+  <div class="loading-text">Ateneo Pickleball Club</div>
+</div>
+
+<nav>
+  <div class="nav-logo">AdNU <em style="color:var(--white);font-style:normal;">|</em> <span>Mosaic</span></div>
+  <div class="nav-links">
+    <button class="nav-btn active" onclick="showPage('auth')">Login / Register</button>
+    <button class="nav-btn" onclick="showPage('pins')">Pins</button>
+  </div>
+</nav>
+
+<!-- AUTH PAGE -->
+<div class="auth-page active" id="page-auth">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo-circle">M</div>
+      <div class="auth-title">AdNU <em>Mosaic</em></div>
+      <div class="auth-subtitle">Campus Memory Map</div>
+    </div>
+    <div class="tab-switcher">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
+      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="auth-form-wrap" id="form-login">
+      
+      <div class="alert" id="login-alert"></div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="text" id="login-email" placeholder="e.g. jruzzel@adnu.edu.ph">
+        <div class="field-error" id="err-login-email">This field is required.</div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="Enter your password">
+        <div class="field-error" id="err-login-password">This field is required.</div>
+      </div>
+      <button class="btn-primary" id="btn-login" onclick="doLogin()">Login</button>
+      <div class="auth-switch">Don't have an account? <a onclick="switchTab('register')">Sign Up</a></div>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="auth-form-wrap" id="form-register" style="display:none;">
+      
+      <div class="alert" id="register-alert"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>First Name</label>
+          <input type="text" id="reg-first" placeholder="Juan">
+          <div class="field-error" id="err-reg-first">Required.</div>
+        </div>
+        <div class="form-group">
+          <label>Last Name</label>
+          <input type="text" id="reg-last" placeholder="dela Cruz">
+          <div class="field-error" id="err-reg-last">Required.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="yourname@adnu.edu.ph">
+        <div class="field-error" id="err-reg-email">Enter a valid email.</div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>User Type</label>
+          <select id="reg-type">
+            <option value="">Select…</option>
+            <option value="student">Student</option>
+            <option value="faculty">Faculty</option>
+          </select>
+          <div class="field-error" id="err-reg-type">Required.</div>
+        </div>
+        <div class="form-group">
+          <label>Year Level</label>
+          <select id="reg-year">
+            <option value="">Select…</option>
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+            <option>N/A</option>
+          </select>
+          <div class="field-error" id="err-reg-year">Required.</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min. 8 characters">
+        <div class="field-error" id="err-reg-password">Min. 8 characters required.</div>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" id="reg-confirm" placeholder="Repeat password">
+        <div class="field-error" id="err-reg-confirm">Passwords do not match.</div>
+      </div>
+      <button class="btn-primary gold" id="btn-register" onclick="doRegister()">Create Account</button>
+      <div class="auth-switch">Already have an account? <a onclick="switchTab('login')">Sign In</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- PINS READ PAGE -->
+<div class="page" id="page-pins">
+  <div class="pins-page">
+    <div class="pins-header">
+      <div>
+        <h1>Public <span>Pins</span></h1>
+        <p>Explore campus memories pinned by students & faculty</p>
+      </div>
+    </div>
+    
+    <div class="pins-controls">
+      <div class="search-wrap">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="search-input" placeholder="Search pins by title or story…" oninput="filterPins()">
+      </div>
+    </div>
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="pins-grid" id="pins-grid"></div>
+  </div>
+</div>
+
+<script>
+/* ── Flask API base URL ── */
+const API = 'http://127.0.0.1:5000';
+let allPins = [];
+
+/* ── Page routing ── */
+function showPage(page) {
+  document.querySelectorAll('.page, .auth-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    if (b.textContent.toLowerCase().includes(page === 'auth' ? 'login' : 'pins')) b.classList.add('active');
+  });
+  if (page === 'pins') loadPins();
+}
+
+/* ── Tab switcher ── */
+function switchTab(tab) {
+  document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+
+/* ── Helpers ── */
+function showAlert(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'alert show ' + type;
+  el.textContent = msg;
+}
+function hideAlert(id) {
+  const el = document.getElementById(id);
+  el.className = 'alert';
+  el.textContent = '';
+}
+function fieldError(id, show) {
+  const el = document.getElementById('err-' + id);
+  if (el) el.className = 'field-error' + (show ? ' show' : '');
+  const inp = document.getElementById(id);
+  if (inp) inp.classList.toggle('error', show);
+}
+function val(id) { return (document.getElementById(id) || {}).value || ''; }
+
+/* ── LOGIN — calls Flask POST /api/auth/login ── */
+async function doLogin() {
+  hideAlert('login-alert');
+  let ok = true;
+  const email = val('login-email');
+  const pass  = val('login-password');
+  if (!email) { fieldError('login-email', true); ok = false; } else fieldError('login-email', false);
+  if (!pass)  { fieldError('login-password', true); ok = false; } else fieldError('login-password', false);
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-login');
+  btn.textContent = 'Logging in…'; btn.disabled = true;
+
+  try {
+    const res  = await fetch(`${API}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password: pass })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert('login-alert', 'danger', data.error || 'Invalid email or password.'); return; }
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user_name', data.first_name);
+    showAlert('login-alert', 'success', `Welcome back, ${data.first_name}! Redirecting…`);
+    setTimeout(() => showPage('pins'), 1200);
+  } catch (err) {
+    showAlert('login-alert', 'danger', 'Cannot reach server. Is Flask running on port 5000?');
+  } finally {
+    btn.textContent = 'Login'; btn.disabled = false;
+  }
+}
+
+/* ── REGISTER — calls Flask POST /api/auth/register ── */
+async function doRegister() {
+  hideAlert('register-alert');
+  let ok = true;
+  const first    = val('reg-first');
+  const last     = val('reg-last');
+  const email    = val('reg-email');
+  const type     = val('reg-type');
+  const year     = val('reg-year');
+  const password = val('reg-password');
+  const confirm  = val('reg-confirm');
+
+  if (!first)   { fieldError('reg-first', true); ok = false; }    else fieldError('reg-first', false);
+  if (!last)    { fieldError('reg-last', true); ok = false; }     else fieldError('reg-last', false);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { fieldError('reg-email', true); ok = false; } else fieldError('reg-email', false);
+  if (!type)    { fieldError('reg-type', true); ok = false; }     else fieldError('reg-type', false);
+  if (!year)    { fieldError('reg-year', true); ok = false; }     else fieldError('reg-year', false);
+  if (password.length < 8) { fieldError('reg-password', true); ok = false; } else fieldError('reg-password', false);
+  if (password !== confirm) { fieldError('reg-confirm', true); ok = false; }  else fieldError('reg-confirm', false);
+  if (!ok) return;
+
+  const btn = document.getElementById('btn-register');
+  btn.textContent = 'Creating account…'; btn.disabled = true;
+
+  try {
+    const res  = await fetch(`${API}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ first_name: first, last_name: last, email, password, user_type: type, year_level: year })
+    });
+    const data = await res.json();
+    if (!res.ok) { showAlert('register-alert', 'danger', data.error || 'Registration failed.'); return; }
+    showAlert('register-alert', 'success', `Account created! Welcome, ${first}! You can now log in.`);
+    setTimeout(() => { switchTab('login'); hideAlert('register-alert'); }, 1800);
+  } catch (err) {
+    showAlert('register-alert', 'danger', 'Cannot reach server. Is Flask running on port 5000?');
+  } finally {
+    btn.textContent = 'Create Account'; btn.disabled = false;
+  }
+}
+
+/* ── LOAD PINS — calls Flask GET /api/pins ── */
+async function loadPins() {
+  const grid = document.getElementById('pins-grid');
+  grid.innerHTML = '<p style="color:var(--gray-400);padding:2rem;grid-column:1/-1;">Loading pins from database…</p>';
+  try {
+    const res  = await fetch(`${API}/api/pins`, {
+      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+    });
+    const data = await res.json();
+    if (!res.ok) { grid.innerHTML = '<p style="color:var(--danger);padding:2rem;grid-column:1/-1;">Failed to load pins.</p>'; return; }
+    allPins = data;
+    renderPins(allPins);
+  } catch (err) {
+    grid.innerHTML = '<p style="color:var(--danger);padding:2rem;grid-column:1/-1;">Cannot reach server. Make sure Flask is running on port 5000.</p>';
+  }
+}
+
+/* ── RENDER PINS ── */
+const bgClasses = ['bg-1','bg-2','bg-3','bg-4','bg-5','bg-6'];
+
+function renderPins(pins) {
+  const grid  = document.getElementById('pins-grid');
+  const stats = document.getElementById('stats-bar');
+  stats.innerHTML = `<div class="stat-pill">Total pins: <strong>${pins.length}</strong></div>`;
+  if (!pins.length) {
+    grid.innerHTML = '<div class="no-results"><p>No public pins yet. Be the first to create one!</p></div>';
+    return;
+  }
+  grid.innerHTML = pins.map((p, i) => {
+    const initials = p.author ? p.author.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : 'U';
+    const bg = bgClasses[i % bgClasses.length];
+    return `
+      <div class="pin-card">
+        <div class="pin-img ${bg}">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <div class="pin-loc-badge">${p.location || 'Campus'}</div>
+          <div class="pin-visibility public">Public</div>
+        </div>
+        <div class="pin-body">
+          <div class="pin-meta">
+            <div class="pin-avatar">${initials}</div>
+            <div class="pin-author">${p.author || 'Anonymous'}</div>
+            <div class="pin-date">${p.date ? String(p.date).slice(0,10) : ''}</div>
+          </div>
+          <div class="pin-title">${p.title}</div>
+          <div class="pin-story">${p.content}</div>
+        </div>
+        <div class="pin-footer">
+          <span class="category-tag tag-campus">Pin #${p.pin_id}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── CLIENT-SIDE SEARCH ── */
+function filterPins() {
+  const search = val('search-input').toLowerCase();
+  renderPins(allPins.filter(p =>
+    !search ||
+    (p.title && p.title.toLowerCase().includes(search)) ||
+    (p.content && p.content.toLowerCase().includes(search))
+  ));
+}
+
+/* ── Init ── */
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('loader').classList.add('hidden');
+    setTimeout(() => document.getElementById('loader').remove(), 400);
+  }, 1400);
+});
+</script>
+</body>
+</html>
