@@ -87,7 +87,7 @@
   .pin-author { font-size: 0.8rem; font-weight: 600; color: var(--gray-600); }
   .pin-date { font-size: 0.75rem; color: var(--gray-400); margin-left: auto; }
   .pin-title { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--navy-dark); margin-bottom: 0.4rem; line-height: 1.35; }
-  .pin-story { font-size: 0.83rem; color: var(--gray-600); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .pin-story { font-size: 0.83rem; color: var(--gray-600); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .pin-footer { padding: 0.65rem 1.1rem; border-top: 1px solid var(--gray-100); display: flex; align-items: center; gap: 0.5rem; }
   .category-tag { font-size: 0.72rem; font-weight: 600; padding: 2px 8px; border-radius: 20px; }
   .tag-campus { background: #f5e8f8; color: #6a1a8a; }
@@ -121,104 +121,12 @@
 <nav>
   <div class="nav-logo">AdNU <em style="color:var(--white);font-style:normal;">|</em> <span>Mosaic</span></div>
   <div class="nav-links">
-    <button class="nav-btn active" onclick="showPage('auth')">Login / Register</button>
-    <button class="nav-btn" onclick="showPage('pins')">Pins</button>
+    <button class="nav-btn active" onclick="showPage('pins')">Pins</button>
   </div>
 </nav>
 
-<!-- AUTH PAGE -->
-<div class="auth-page active" id="page-auth">
-  <div class="auth-card">
-    <div class="auth-header">
-      <div class="auth-logo-circle">M</div>
-      <div class="auth-title">AdNU <em>Mosaic</em></div>
-      <div class="auth-subtitle">Campus Memory Map</div>
-    </div>
-    <div class="tab-switcher">
-      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">Login</button>
-      <button class="tab-btn" id="tab-register" onclick="switchTab('register')">Register</button>
-    </div>
-
-    <!-- LOGIN -->
-    <div class="auth-form-wrap" id="form-login">
-      
-      <div class="alert" id="login-alert"></div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="text" id="login-email" placeholder="e.g. jruzzel@adnu.edu.ph">
-        <div class="field-error" id="err-login-email">This field is required.</div>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="login-password" placeholder="Enter your password">
-        <div class="field-error" id="err-login-password">This field is required.</div>
-      </div>
-      <button class="btn-primary" id="btn-login" onclick="doLogin()">Login</button>
-      <div class="auth-switch">Don't have an account? <a onclick="switchTab('register')">Sign Up</a></div>
-    </div>
-
-    <!-- REGISTER -->
-    <div class="auth-form-wrap" id="form-register" style="display:none;">
-      
-      <div class="alert" id="register-alert"></div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>First Name</label>
-          <input type="text" id="reg-first" placeholder="Juan">
-          <div class="field-error" id="err-reg-first">Required.</div>
-        </div>
-        <div class="form-group">
-          <label>Last Name</label>
-          <input type="text" id="reg-last" placeholder="dela Cruz">
-          <div class="field-error" id="err-reg-last">Required.</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="reg-email" placeholder="yourname@adnu.edu.ph">
-        <div class="field-error" id="err-reg-email">Enter a valid email.</div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label>User Type</label>
-          <select id="reg-type">
-            <option value="">Select…</option>
-            <option value="student">Student</option>
-            <option value="faculty">Faculty</option>
-          </select>
-          <div class="field-error" id="err-reg-type">Required.</div>
-        </div>
-        <div class="form-group">
-          <label>Year Level</label>
-          <select id="reg-year">
-            <option value="">Select…</option>
-            <option>1st Year</option>
-            <option>2nd Year</option>
-            <option>3rd Year</option>
-            <option>4th Year</option>
-            <option>N/A</option>
-          </select>
-          <div class="field-error" id="err-reg-year">Required.</div>
-        </div>
-      </div>
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" id="reg-password" placeholder="Min. 8 characters">
-        <div class="field-error" id="err-reg-password">Min. 8 characters required.</div>
-      </div>
-      <div class="form-group">
-        <label>Confirm Password</label>
-        <input type="password" id="reg-confirm" placeholder="Repeat password">
-        <div class="field-error" id="err-reg-confirm">Passwords do not match.</div>
-      </div>
-      <button class="btn-primary gold" id="btn-register" onclick="doRegister()">Create Account</button>
-      <div class="auth-switch">Already have an account? <a onclick="switchTab('login')">Sign In</a></div>
-    </div>
-  </div>
-</div>
-
 <!-- PINS READ PAGE -->
-<div class="page" id="page-pins">
+<div class="page active" id="page-pins">
   <div class="pins-page">
     <div class="pins-header">
       <div>
@@ -245,22 +153,14 @@ let allPins = [];
 
 /* ── Page routing ── */
 function showPage(page) {
-  document.querySelectorAll('.page, .auth-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const target = document.getElementById('page-' + page);
   if (target) target.classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(b => {
-    if (b.textContent.toLowerCase().includes(page === 'auth' ? 'login' : 'pins')) b.classList.add('active');
+    if (b.textContent.toLowerCase().includes(page)) b.classList.add('active');
   });
   if (page === 'pins') loadPins();
-}
-
-/* ── Tab switcher ── */
-function switchTab(tab) {
-  document.getElementById('form-login').style.display    = tab === 'login'    ? 'block' : 'none';
-  document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
-  document.getElementById('tab-register').classList.toggle('active', tab === 'register');
 }
 
 /* ── Helpers ── */
@@ -282,87 +182,12 @@ function fieldError(id, show) {
 }
 function val(id) { return (document.getElementById(id) || {}).value || ''; }
 
-/* ── LOGIN — calls Flask POST /api/auth/login ── */
-async function doLogin() {
-  hideAlert('login-alert');
-  let ok = true;
-  const email = val('login-email');
-  const pass  = val('login-password');
-  if (!email) { fieldError('login-email', true); ok = false; } else fieldError('login-email', false);
-  if (!pass)  { fieldError('login-password', true); ok = false; } else fieldError('login-password', false);
-  if (!ok) return;
-
-  const btn = document.getElementById('btn-login');
-  btn.textContent = 'Logging in…'; btn.disabled = true;
-
-  try {
-    const res  = await fetch(`${API}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password: pass })
-    });
-    const data = await res.json();
-    if (!res.ok) { showAlert('login-alert', 'danger', data.error || 'Invalid email or password.'); return; }
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user_name', data.first_name);
-    showAlert('login-alert', 'success', `Welcome back, ${data.first_name}! Redirecting…`);
-    setTimeout(() => showPage('pins'), 1200);
-  } catch (err) {
-    showAlert('login-alert', 'danger', 'Cannot reach server. Is Flask running on port 5000?');
-  } finally {
-    btn.textContent = 'Login'; btn.disabled = false;
-  }
-}
-
-/* ── REGISTER — calls Flask POST /api/auth/register ── */
-async function doRegister() {
-  hideAlert('register-alert');
-  let ok = true;
-  const first    = val('reg-first');
-  const last     = val('reg-last');
-  const email    = val('reg-email');
-  const type     = val('reg-type');
-  const year     = val('reg-year');
-  const password = val('reg-password');
-  const confirm  = val('reg-confirm');
-
-  if (!first)   { fieldError('reg-first', true); ok = false; }    else fieldError('reg-first', false);
-  if (!last)    { fieldError('reg-last', true); ok = false; }     else fieldError('reg-last', false);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { fieldError('reg-email', true); ok = false; } else fieldError('reg-email', false);
-  if (!type)    { fieldError('reg-type', true); ok = false; }     else fieldError('reg-type', false);
-  if (!year)    { fieldError('reg-year', true); ok = false; }     else fieldError('reg-year', false);
-  if (password.length < 8) { fieldError('reg-password', true); ok = false; } else fieldError('reg-password', false);
-  if (password !== confirm) { fieldError('reg-confirm', true); ok = false; }  else fieldError('reg-confirm', false);
-  if (!ok) return;
-
-  const btn = document.getElementById('btn-register');
-  btn.textContent = 'Creating account…'; btn.disabled = true;
-
-  try {
-    const res  = await fetch(`${API}/api/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ first_name: first, last_name: last, email, password, user_type: type, year_level: year })
-    });
-    const data = await res.json();
-    if (!res.ok) { showAlert('register-alert', 'danger', data.error || 'Registration failed.'); return; }
-    showAlert('register-alert', 'success', `Account created! Welcome, ${first}! You can now log in.`);
-    setTimeout(() => { switchTab('login'); hideAlert('register-alert'); }, 1800);
-  } catch (err) {
-    showAlert('register-alert', 'danger', 'Cannot reach server. Is Flask running on port 5000?');
-  } finally {
-    btn.textContent = 'Create Account'; btn.disabled = false;
-  }
-}
-
 /* ── LOAD PINS — calls Flask GET /api/pins ── */
 async function loadPins() {
   const grid = document.getElementById('pins-grid');
   grid.innerHTML = '<p style="color:var(--gray-400);padding:2rem;grid-column:1/-1;">Loading pins from database…</p>';
   try {
-    const res  = await fetch(`${API}/api/pins`, {
-      headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
-    });
+    const res  = await fetch('http://127.0.0.1:5000/api/pins');
     const data = await res.json();
     if (!res.ok) { grid.innerHTML = '<p style="color:var(--danger);padding:2rem;grid-column:1/-1;">Failed to load pins.</p>'; return; }
     allPins = data;
@@ -425,6 +250,7 @@ window.addEventListener('load', () => {
     document.getElementById('loader').classList.add('hidden');
     setTimeout(() => document.getElementById('loader').remove(), 400);
   }, 1400);
+  loadPins();
 });
 </script>
 </body>
