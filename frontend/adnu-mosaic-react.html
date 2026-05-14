@@ -17,7 +17,7 @@
     <button class="nav-btn active" onclick="app.showPage('explore')">Explore</button>
     <button class="nav-btn" onclick="app.showPage('create')">Create Pin</button>
     <button class="nav-btn" onclick="app.showPage('admin')">Admin</button>
-    <a href="adnu-mosaic.html" class="nav-btn">Public Pins</a>
+    <a href="adnu-mosaic.html" class="nav-btn">Pins</a>
   </div>
 </nav>
 
@@ -25,7 +25,7 @@
 <div id="page-explore" class="page active">
   <div class="explore-container">
     <div class="explore-header">
-      <h1>Campus Memories</h1>
+      <h1>Map</h1>
       <p>Discover and explore memories pinned across Ateneo de Naga University</p>
     </div>
     
@@ -88,16 +88,6 @@
             </select>
           </div>
           
-          <div class="form-group">
-            <label for="category">Category</label>
-            <select id="category">
-              <option value="campus">Campus</option>
-              <option value="event">Event</option>
-              <option value="friendship">Friendship</option>
-              <option value="achievement">Achievement</option>
-              <option value="other">Other</option>
-            </select>
-          </div>
         </div>
         
         <input type="hidden" id="location-lat">
@@ -144,6 +134,13 @@
   </div>
 </div>
 
+<div id="pin-modal-overlay" class="modal-overlay" onclick="app.closePinModal(event)">
+  <div class="pin-modal" onclick="event.stopPropagation()">
+    <button class="modal-close-btn" onclick="app.closePinModal(event)">&times;</button>
+    <div id="modal-pin-content"></div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -181,6 +178,7 @@ const app = {
     await this.loadPins();
     this.populateLocationFilter();
     this.initMap();
+    this.addMarkers();
   },
   
   initMap() {
@@ -195,8 +193,9 @@ const app = {
       attributionControl: true
     });
     
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+      subdomains: 'abcd',
       maxZoom: 19,
       maxNativeZoom: 19
     }).addTo(this.map);
@@ -394,7 +393,8 @@ const app = {
       doubleClickZoom: false
     });
     
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png', {
+      subdomains: 'abcd',
       maxZoom: 19,
       maxNativeZoom: 19
     }).addTo(this.miniMap);
@@ -476,27 +476,63 @@ const app = {
       grid.innerHTML = '<div class="no-results"><i class="fas fa-inbox"></i><p>No pins found. Create the first memory!</p></div>';
       return;
     }
-    
-    grid.innerHTML = this.filteredPins.map(pin => `
-      <div class="pin-card" onclick="app.highlightPinOnMap(${pin.pin_id})">
-        <div class="pin-img">
-          <i class="fas fa-map-pin"></i>
-          <div class="pin-badge">${pin.location_name || 'Campus'}</div>
+    const bgClasses = ['bg-1', 'bg-2', 'bg-3', 'bg-4', 'bg-5', 'bg-6'];
+
+    grid.innerHTML = this.filteredPins.map((pin, index) => {
+      const bg = bgClasses[index % bgClasses.length];
+      const initials = (pin.author || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      return `
+      <div class="pin-card" onclick="app.openPinModal(${pin.pin_id})">
+        <div class="pin-img ${bg}">
+          <svg width="50" height="50" viewBox="0 0 24 24" fill="white" stroke="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+          <div class="pin-loc-badge">${pin.location_name || 'Campus'}</div>
         </div>
         <div class="pin-body">
           <div class="pin-meta">
-            <div class="pin-avatar">${(pin.author || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)}</div>
+            <div class="pin-avatar">${initials}</div>
             <div class="pin-author">${pin.author || 'Anonymous'}</div>
             <div class="pin-date">${new Date(pin.created_at).toLocaleDateString()}</div>
           </div>
           <div class="pin-title">${pin.title}</div>
           <div class="pin-content">${pin.content}</div>
-          <div class="pin-location"><i class="fas fa-location-dot"></i>${pin.location_name || 'Campus'}</div>
+        </div>
+        <div class="pin-footer">
+          <span class="category-tag tag-campus">Pin #${pin.pin_id}</span>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   },
   
+  openPinModal(pinId) {
+    const pin = this.pins.find(p => p.pin_id === pinId);
+    if (!pin) return;
+    this.highlightPinOnMap(pinId);
+    const overlay = document.getElementById('pin-modal-overlay');
+    const content = document.getElementById('modal-pin-content');
+    content.innerHTML = `
+      <div class="modal-pin-header">
+        <div>
+          <div class="pin-title">${pin.title}</div>
+          <div class="pin-meta modal-meta">
+            <span>${pin.author || 'Anonymous'}</span>
+            <span>${new Date(pin.created_at).toLocaleDateString()}</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-pin-body">
+        <div class="pin-location"><i class="fas fa-location-dot"></i>${pin.location_name || 'Campus'}</div>
+        <p>${pin.content}</p>
+      </div>
+    `;
+    overlay.classList.add('visible');
+  },
+
+  closePinModal(event) {
+    if (event) event.stopPropagation();
+    document.getElementById('pin-modal-overlay').classList.remove('visible');
+  },
+
   filterPins() {
     const search = document.getElementById('search-input').value.toLowerCase();
     this.filteredPins = this.pins.filter(pin =>
@@ -560,7 +596,6 @@ const app = {
         location_name: selectedLocation.location_name,
         latitude: lat,
         longitude: lng,
-        category: document.getElementById('category').value,
         visibility: 'public'
       };
       

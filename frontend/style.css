@@ -380,6 +380,10 @@ nav {
   overflow: hidden;
   transition: transform 0.15s, box-shadow 0.15s;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  aspect-ratio: 1 / 1;
+  min-height: 320px;
 }
 
 .pin-card:hover {
@@ -387,10 +391,93 @@ nav {
   box-shadow: 0 6px 24px rgba(26,46,90,0.1);
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12,22,44,0.65);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 1rem;
+}
+
+.modal-overlay.visible {
+  display: flex;
+}
+
+.pin-modal {
+  width: min(680px, 100%);
+  max-height: min(90vh, 720px);
+  background: var(--white);
+  border-radius: 24px;
+  overflow: auto;
+  padding: 1.5rem 2rem 1.5rem 1.5rem;
+  position: relative;
+  box-shadow: 0 34px 80px rgba(14,24,50,0.22);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(26,46,90,0.08);
+  color: var(--navy-dark);
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+.modal-pin-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-right: 48px;
+}
+
+.modal-pin-header > div {
+  min-width: 0;
+}
+
+.modal-meta {
+  display: flex;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+  color: var(--gray-600);
+  font-size: 0.9rem;
+}
+
+.modal-pin-body {
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-100);
+}
+
+.pin-modal .pin-location {
+  margin-bottom: 1rem;
+}
+
+.pin-modal .pin-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.pin-modal .pin-content {
+  display: block;
+  line-height: 1.75;
+  color: var(--gray-700);
+  font-size: 1rem;
+}
+
 .pin-img,
 .pin-image {
-  height: 108px;
-  background: linear-gradient(180deg, rgba(26,46,90,0.95) 0%, rgba(26,46,90,0.72) 100%);
+  height: 110px;
+  background: var(--gray-100);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -403,7 +490,7 @@ nav {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 38%);
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.55), transparent 50%);
   pointer-events: none;
 }
 
@@ -411,16 +498,15 @@ nav {
 .pin-img i,
 .pin-image i,
 .pin-image svg {
-  opacity: 0.16;
-  color: var(--white);
+  opacity: 0.25;
+  color: var(--gray-400);
 }
 
 .pin-img i {
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
-.pin-loc-badge,
-.pin-badge {
+.pin-loc-badge {
   position: absolute;
   bottom: 10px;
   left: 12px;
@@ -440,24 +526,8 @@ nav {
   bottom: auto;
 }
 
-.pin-visibility {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 3px 8px;
-  border-radius: 20px;
-  text-transform: uppercase;
-}
-
-.pin-visibility.public {
-  background: rgba(26,122,74,0.85);
-  color: #d0fce9;
-}
-
 .pin-body {
-  padding: 1rem 1.1rem;
+  padding: 0.85rem 0.95rem;
 }
 
 .pin-meta {
@@ -495,26 +565,26 @@ nav {
 
 .pin-title {
   font-family: 'Playfair Display', serif;
-  font-size: 1.05rem;
+  font-size: 0.98rem;
   color: var(--navy-dark);
-  margin-bottom: 0.4rem;
-  line-height: 1.35;
+  margin-bottom: 0.3rem;
+  line-height: 1.3;
 }
 
 .pin-story,
 .pin-content {
-  font-size: 0.83rem;
+  font-size: 0.8rem;
   color: var(--gray-600);
-  line-height: 1.6;
+  line-height: 1.5;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .pin-footer {
-  padding: 0.65rem 1.1rem;
+  padding: 0.65rem 0.95rem 0.95rem;
   border-top: 1px solid var(--gray-100);
   display: flex;
   align-items: center;
@@ -522,9 +592,22 @@ nav {
 }
 
 .pin-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   font-size: 0.8rem;
   color: var(--gold-dark);
   font-weight: 600;
+  line-height: 1.4;
+}
+
+.pin-location i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  min-width: 1rem;
+  color: var(--gold-dark);
 }
 
 /* ── Category Tags ── */
@@ -623,8 +706,8 @@ nav {
 /* ── Grid Layouts ── */
 .pins-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
 }
 
 /* ── No Results ── */
