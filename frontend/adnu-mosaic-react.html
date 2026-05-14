@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdNU Mosaic</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-logo">AdNU <span>Mosaic</span></div>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-btn active" onclick="app.showPage('explore')">Explore</button>
+    <button class="nav-btn" onclick="app.showPage('create')">Create Pin</button>
+    <button class="nav-btn" onclick="app.showPage('admin')">Admin</button>
+    <a href="adnu-mosaic.html" class="nav-btn">Public Pins</a>
+  </div>
+</nav>
+
+<!-- Explore Page -->
+<div id="page-explore" class="page active">
+  <div class="explore-container">
+    <div class="explore-header">
+      <h1>Campus Memories</h1>
+      <p>Discover and explore memories pinned across Ateneo de Naga University</p>
+    </div>
+    
+    <div class="controls">
+      <div class="search-box">
+        <input type="text" id="search-input" placeholder="Search by title or story..." onkeyup="app.filterPins()">
+        <i class="fas fa-search search-icon"></i>
+      </div>
+      <select id="location-filter" class="filter-select" onchange="app.filterByLocation()">
+        <option value="">All Locations</option>
+      </select>
+    </div>
+    
+    <div class="map-container map-container-bordered">
+      <div id="campus-map"></div>
+      <div class="map-legend">
+        <div class="map-legend-title">AdNU Campus Map</div>
+        <div class="map-legend-item"><div class="legend-pin"></div> Memory Pin</div>
+        <div class="map-legend-item">Click pin to view memory</div>
+        <div class="map-legend-item">Click card to locate on map</div>
+      </div>
+    </div>
+    
+    <div id="stats"></div>
+    
+    <div id="pins-grid" class="pins-grid"></div>
+  </div>
+</div>
+
+<!-- Create Pin Page -->
+<div id="page-create" class="page">
+  <div class="create-container">
+    <div class="form-section">
+      <h2>Share Your Memory</h2>
+      
+      <div class="success-message" id="success-msg">Your pin has been created successfully!</div>
+      <div class="alert alert-danger" id="error-msg"></div>
+      
+      <form id="pin-form" onsubmit="app.createPin(event)">
+        <div class="form-group">
+          <label for="author">Your Name</label>
+          <input type="text" id="author" placeholder="Enter your name" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="title">Memory Title</label>
+          <input type="text" id="title" placeholder="Give your memory a title" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="content">Your Story</label>
+          <textarea id="content" placeholder="Share your campus memory in detail..." required></textarea>
+        </div>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label for="location-name">Building / Location <span>(pin will appear here on map)</span></label>
+            <select id="location-name" required onchange="app.onLocationChange()">
+              <option value="">Select a building or location...</option>
+            </select>
+          </div>
+          
+          <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category">
+              <option value="campus">Campus</option>
+              <option value="event">Event</option>
+              <option value="friendship">Friendship</option>
+              <option value="achievement">Achievement</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        
+        <input type="hidden" id="location-lat">
+        <input type="hidden" id="location-lng">
+        
+        <div class="form-group" id="location-preview" style="display: none;">
+          <label>Selected Location Preview</label>
+          <div id="mini-map"></div>
+          <p id="location-coords"></p>
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="submit-btn">Share Memory</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Login Page -->
+<div id="page-admin" class="page">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo">Admin Portal</div>
+        <div class="auth-subtitle">Manage campus memories</div>
+      </div>
+      <div class="auth-body">
+        <div class="alert alert-danger" id="login-error"></div>
+        
+        <form id="login-form" onsubmit="app.adminLogin(event)">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" placeholder="admin@adnu.edu.ph" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter password" required>
+          </div>
+          
+          <button type="submit" class="btn btn-primary" id="login-btn">Sign In</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.4.0/axios.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const API = 'http://127.0.0.1:5000/api';
+
+const CAMPUS_POLYGON = [
+  [13.629765159096044, 123.18293825625067],
+  [13.629222970170265, 123.18512962096604],
+  [13.6322076005151, 123.18640635245315],
+  [13.632809735342097, 123.18419353003817]
+];
+
+const ADNU_CENTER = [13.6310, 123.1845];
+
+const DEFAULT_ZOOM = 17;
+
+const CAMPUS_BOUNDS = [
+  [13.6285, 123.1822],
+  [13.6335, 123.1870]
+];
+
+const app = {
+  pins: [],
+  locations: [],
+  filteredPins: [],
+  token: localStorage.getItem('admin_token'),
+  map: null,
+  miniMap: null,
+  markers: [],
+  locationLabels: [],
+  campusPolygon: null,
+  
+  async init() {
+    await this.loadLocations();
+    await this.loadPins();
+    this.populateLocationFilter();
+    this.initMap();
+  },
+  
+  initMap() {
+    this.map = L.map('campus-map', {
+      center: ADNU_CENTER,
+      zoom: DEFAULT_ZOOM,
+      maxBounds: CAMPUS_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 16,
+      maxZoom: 20,
+      zoomControl: true,
+      attributionControl: true
+    });
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      maxZoom: 20,
+      subdomains: 'abcd'
+    }).addTo(this.map);
+    
+    this.campusPolygon = L.polygon(CAMPUS_POLYGON, {
+      color: '#1a2e5a',
+      weight: 3,
+      fillColor: '#1a2e5a',
+      fillOpacity: 0.06,
+      dashArray: '10, 8'
+    }).addTo(this.map);
+    
+    // Campus title label
+    L.marker([13.6324, 123.1845], {
+      icon: L.divIcon({
+        className: 'campus-label-container',
+        html: '<div class="campus-label">Ateneo de Naga University</div>',
+        iconSize: [220, 40],
+        iconAnchor: [110, 20]
+      }),
+      interactive: false,
+      zIndexOffset: -1000
+    }).addTo(this.map);
+    
+    this.addLocationLabels();
+  },
+  
+  addLocationLabels() {
+    this.locationLabels.forEach(label => this.map.removeLayer(label));
+    this.locationLabels = [];
+    
+    this.locations.forEach(loc => {
+      if (!loc.latitude || !loc.longitude) return;
+      
+      const label = L.marker([loc.latitude, loc.longitude], {
+        icon: L.divIcon({
+          className: 'location-label-container',
+          html: `<div class="location-label">${loc.location_name}</div>`,
+          iconSize: [140, 16],
+          iconAnchor: [70, 8]
+        }),
+        interactive: false,
+        zIndexOffset: -500
+      }).addTo(this.map);
+      
+      this.locationLabels.push(label);
+    });
+  },
+  
+  addMarkers() {
+    // Remove old markers
+    this.markers.forEach(marker => this.map.removeLayer(marker));
+    this.markers = [];
+    
+    const pinsWithCoords = this.filteredPins.filter(pin => 
+      pin.latitude && pin.longitude && 
+      !isNaN(parseFloat(pin.latitude)) && !isNaN(parseFloat(pin.longitude))
+    );
+    
+    console.log('Pins with coords:', pinsWithCoords.length, pinsWithCoords);
+    
+    // Group by exact location
+    const locationGroups = {};
+    pinsWithCoords.forEach(pin => {
+      const key = `${parseFloat(pin.latitude).toFixed(6)},${parseFloat(pin.longitude).toFixed(6)}`;
+      if (!locationGroups[key]) locationGroups[key] = [];
+      locationGroups[key].push(pin);
+    });
+    
+    pinsWithCoords.forEach((pin, index) => {
+      const lat = parseFloat(pin.latitude);
+      const lng = parseFloat(pin.longitude);
+      const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+      const group = locationGroups[key];
+      const groupIndex = group.indexOf(pin);
+      
+      // Spiral offset for overlapping pins
+      let offsetLat = 0;
+      let offsetLng = 0;
+      
+      if (group.length > 1) {
+        const angle = (groupIndex / group.length) * 2 * Math.PI;
+        const radius = 0.00006 * (1 + Math.floor(groupIndex / 8));
+        offsetLat = Math.sin(angle) * radius;
+        offsetLng = Math.cos(angle) * radius;
+      }
+      
+      const finalLat = lat + offsetLat;
+      const finalLng = lng + offsetLng;
+      
+      const pinCount = group.length;
+      const countBadge = pinCount > 1 ? `<div class="pin-count-badge">${pinCount}</div>` : '';
+      
+      const icon = L.divIcon({
+        className: 'custom-pin-wrapper',
+        html: `
+          <div class="custom-pin-icon">
+            <div class="pin-pulse"></div>
+            <div class="pin-head"><i class="fas fa-map-pin"></i></div>
+            <div class="pin-point"></div>
+            ${countBadge}
+          </div>
+        `,
+        iconSize: [36, 42],
+        iconAnchor: [18, 42],
+        popupAnchor: [0, -42]
+      });
+      
+      const marker = L.marker([finalLat, finalLng], { icon })
+        .addTo(this.map)
+        .bindPopup(this.createPopupContent(pin, pinCount), {
+          closeButton: true,
+          closeOnClick: false
+        });
+      
+      marker.pinId = pin.pin_id;
+      marker.trueLat = lat;
+      marker.trueLng = lng;
+      this.markers.push(marker);
+    });
+    
+    // DO NOT auto-fit bounds — keeps map centered on campus
+    // Pins are visible at default zoom level
+    console.log('Total markers on map:', this.markers.length);
+  },
+  
+  createPopupContent(pin, countAtLocation) {
+    const countText = countAtLocation > 1 ? `<span style="color:var(--gold);font-size:0.75rem;"> (${countAtLocation} memories here)</span>` : '';
+    return `
+      <div class="map-popup-title">${pin.title}${countText}</div>
+      <div class="map-popup-author">by ${pin.author || 'Anonymous'} &middot; ${new Date(pin.created_at).toLocaleDateString()}</div>
+      <div class="map-popup-story">${pin.content.substring(0, 120)}${pin.content.length > 120 ? '...' : ''}</div>
+      <div class="map-popup-badge">${pin.location_name || 'Campus'}</div>
+    `;
+  },
+  
+  highlightPinOnMap(pinId) {
+    const marker = this.markers.find(m => m.pinId === pinId);
+    if (marker) {
+      this.map.flyTo([marker.trueLat, marker.trueLng], 19, {
+        duration: 1.2,
+        easeLinearity: 0.25
+      });
+      setTimeout(() => marker.openPopup(), 600);
+    }
+  },
+  
+  onLocationChange() {
+    const select = document.getElementById('location-name');
+    const locationId = parseInt(select.value);
+    
+    if (!locationId) {
+      document.getElementById('location-preview').style.display = 'none';
+      document.getElementById('location-lat').value = '';
+      document.getElementById('location-lng').value = '';
+      if (this.miniMap) {
+        this.miniMap.remove();
+        this.miniMap = null;
+      }
+      return;
+    }
+    
+    const location = this.locations.find(l => l.location_id === locationId);
+    if (!location) return;
+    
+    document.getElementById('location-lat').value = location.latitude || '';
+    document.getElementById('location-lng').value = location.longitude || '';
+    
+    const previewDiv = document.getElementById('location-preview');
+    previewDiv.style.display = 'block';
+    
+    const coordsText = document.getElementById('location-coords');
+    
+    if (!location.latitude || !location.longitude) {
+      coordsText.innerHTML = `<span style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> No coordinates available</span>`;
+      document.getElementById('mini-map').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--gray-400);font-size:0.85rem;"><i class="fas fa-map-marker-alt" style="margin-right:8px;"></i>No map preview available</div>';
+      return;
+    }
+    
+    coordsText.textContent = `${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)}`;
+    this.initMiniMap(location.latitude, location.longitude, location.location_name);
+  },
+  
+  initMiniMap(lat, lng, name) {
+    const container = document.getElementById('mini-map');
+    container.innerHTML = '';
+    
+    this.miniMap = L.map('mini-map', {
+      center: [lat, lng],
+      zoom: 19,
+      zoomControl: false,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false
+    });
+    
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 20,
+      subdomains: 'abcd'
+    }).addTo(this.miniMap);
+    
+    L.marker([lat, lng], {
+      icon: L.divIcon({
+        className: 'custom-pin-wrapper',
+        html: `
+          <div class="custom-pin-icon" style="transform:scale(0.75);">
+            <div class="pin-head"><i class="fas fa-map-pin"></i></div>
+            <div class="pin-point"></div>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 28]
+      })
+    }).addTo(this.miniMap).bindPopup(name).openPopup();
+    
+    L.polygon(CAMPUS_POLYGON, {
+      color: '#1a2e5a',
+      weight: 1,
+      fillColor: '#1a2e5a',
+      fillOpacity: 0.03,
+      dashArray: '5, 5'
+    }).addTo(this.miniMap);
+    
+    this.miniMap.invalidateSize();
+  },
+  
+  async loadLocations() {
+    try {
+      const res = await axios.get(`${API}/locations`);
+      this.locations = res.data;
+    } catch (err) {
+      console.error('Failed to load locations:', err);
+    }
+  },
+  
+  async loadPins() {
+    try {
+      const res = await axios.get(`${API}/pins`);
+      this.pins = res.data;
+      this.filteredPins = [...this.pins];
+      this.renderPins();
+      this.updateStats();
+      
+      if (this.map) {
+        this.addMarkers();
+      }
+    } catch (err) {
+      console.error('Failed to load pins:', err);
+      document.getElementById('pins-grid').innerHTML = '<div class="no-results"><i class="fas fa-exclamation-circle"></i><p>Failed to load pins. Make sure the server is running.</p></div>';
+    }
+  },
+  
+  populateLocationFilter() {
+    const select = document.getElementById('location-name');
+    const filterSelect = document.getElementById('location-filter');
+    
+    while (select.options.length > 1) select.remove(1);
+    while (filterSelect.options.length > 1) filterSelect.remove(1);
+    
+    this.locations.forEach(loc => {
+      const option = document.createElement('option');
+      option.value = loc.location_id;
+      option.textContent = loc.location_name;
+      select.appendChild(option);
+      
+      const filterOption = document.createElement('option');
+      filterOption.value = loc.location_id;
+      filterOption.textContent = loc.location_name;
+      filterSelect.appendChild(filterOption);
+    });
+  },
+  
+  renderPins() {
+    const grid = document.getElementById('pins-grid');
+    if (!this.filteredPins.length) {
+      grid.innerHTML = '<div class="no-results"><i class="fas fa-inbox"></i><p>No pins found. Create the first memory!</p></div>';
+      return;
+    }
+    
+    grid.innerHTML = this.filteredPins.map(pin => `
+      <div class="pin-card" onclick="app.highlightPinOnMap(${pin.pin_id})">
+        <div class="pin-img">
+          <i class="fas fa-map-pin"></i>
+          <div class="pin-badge">${pin.location_name || 'Campus'}</div>
+        </div>
+        <div class="pin-body">
+          <div class="pin-meta">
+            <div class="pin-avatar">${(pin.author || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2)}</div>
+            <div class="pin-author">${pin.author || 'Anonymous'}</div>
+            <div class="pin-date">${new Date(pin.created_at).toLocaleDateString()}</div>
+          </div>
+          <div class="pin-title">${pin.title}</div>
+          <div class="pin-content">${pin.content}</div>
+          <div class="pin-location"><i class="fas fa-location-dot"></i>${pin.location_name || 'Campus'}</div>
+        </div>
+      </div>
+    `).join('');
+  },
+  
+  filterPins() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    this.filteredPins = this.pins.filter(pin =>
+      !search ||
+      pin.title.toLowerCase().includes(search) ||
+      pin.content.toLowerCase().includes(search)
+    );
+    this.renderPins();
+    if (this.map) this.addMarkers();
+  },
+  
+  filterByLocation() {
+    const locationId = document.getElementById('location-filter').value;
+    if (!locationId) {
+      this.filteredPins = [...this.pins];
+    } else {
+      this.filteredPins = this.pins.filter(pin => pin.location_id == locationId);
+    }
+    this.renderPins();
+    if (this.map) this.addMarkers();
+  },
+  
+  updateStats() {
+    const statsDiv = document.getElementById('stats');
+    const pinsWithCoords = this.pins.filter(p => p.latitude && p.longitude).length;
+    
+    statsDiv.innerHTML = `
+      <div class="stat-pill"><strong>${this.pins.length}</strong> total memories</div>
+      <div class="stat-pill"><strong>${this.locations.length}</strong> campus locations</div>
+      <div class="stat-pill"><strong>${pinsWithCoords}</strong> pinned on map</div>
+    `;
+  },
+  
+  async createPin(event) {
+    event.preventDefault();
+    const btn = document.getElementById('submit-btn');
+    btn.classList.add('loading');
+    
+    try {
+      const locationSelect = document.getElementById('location-name');
+      const locationId = parseInt(locationSelect.value);
+      const selectedLocation = this.locations.find(l => l.location_id === locationId);
+      
+      if (!selectedLocation) {
+        throw new Error('Please select a valid location');
+      }
+      
+      const lat = parseFloat(document.getElementById('location-lat').value) || selectedLocation?.latitude;
+      const lng = parseFloat(document.getElementById('location-lng').value) || selectedLocation?.longitude;
+      
+      if (!lat || !lng) {
+        throw new Error('Selected location has no coordinates.');
+      }
+      
+      const data = {
+        author: document.getElementById('author').value,
+        title: document.getElementById('title').value,
+        content: document.getElementById('content').value,
+        location_id: locationId,
+        location_name: selectedLocation.location_name,
+        latitude: lat,
+        longitude: lng,
+        category: document.getElementById('category').value,
+        visibility: 'public'
+      };
+      
+      await axios.post(`${API}/pins`, data);
+      document.getElementById('success-msg').classList.add('show');
+      document.getElementById('pin-form').reset();
+      document.getElementById('location-preview').style.display = 'none';
+      document.getElementById('location-lat').value = '';
+      document.getElementById('location-lng').value = '';
+      if (this.miniMap) {
+        this.miniMap.remove();
+        this.miniMap = null;
+      }
+      
+      setTimeout(() => {
+        document.getElementById('success-msg').classList.remove('show');
+        this.loadPins();
+        this.showPage('explore');
+      }, 2000);
+    } catch (err) {
+      document.getElementById('error-msg').textContent = 'Failed to create pin: ' + (err.response?.data?.error || err.message);
+      document.getElementById('error-msg').classList.add('show');
+    } finally {
+      btn.classList.remove('loading');
+    }
+  },
+  
+  async adminLogin(event) {
+    event.preventDefault();
+    const btn = document.getElementById('login-btn');
+    btn.classList.add('loading');
+    
+    try {
+      const res = await axios.post(`${API}/auth/login`, {
+        email: document.getElementById('email').value,
+        password: document.getElementById('password').value
+      });
+      
+      localStorage.setItem('admin_token', res.data.access_token);
+      this.token = res.data.access_token;
+      document.getElementById('login-error').classList.remove('show');
+      
+      this.showAdminPanel();
+    } catch (err) {
+      document.getElementById('login-error').textContent = err.response?.data?.error || 'Login failed';
+      document.getElementById('login-error').classList.add('show');
+    } finally {
+      btn.classList.remove('loading');
+    }
+  },
+  
+  showAdminPanel() {
+    alert('Admin logged in! Full admin panel with edit/delete capabilities coming soon.');
+    this.showPage('explore');
+  },
+  
+  showPage(page) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(`page-${page}`).classList.add('active');
+    document.querySelector(`button[onclick="app.showPage('${page}')"]`).classList.add('active');
+    
+    if (page === 'explore') {
+      this.loadPins();
+      setTimeout(() => {
+        if (this.map) this.map.invalidateSize();
+      }, 100);
+    }
+  }
+};
+
+window.addEventListener('load', () => app.init());
+</script>
+</body>
+</html>
