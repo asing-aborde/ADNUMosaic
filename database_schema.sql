@@ -37,7 +37,7 @@ CREATE TABLE IF NOT EXISTS pins (
   location_name VARCHAR(100),
   category VARCHAR(50) DEFAULT 'campus',
   visibility ENUM('public', 'private') DEFAULT 'public',
-  image_url VARCHAR(500),
+  image_url LONGTEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (location_id) REFERENCES locations(location_id) ON DELETE SET NULL,

@@ -1,5 +1,5 @@
 /* ============================================
-   ADNU MOSAIC — SHARED STYLES
+   ADNU MOSAIC — MINIMAL FUN VIBES
    ============================================ */
 
 /* ── Reset & Base ── */
@@ -240,17 +240,17 @@ nav {
   color: var(--gray-800);
   background: var(--surface);
   outline: none;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
   box-shadow: inset 0 1px 4px rgba(16,30,65,0.06);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-  border-color: var(--navy-light);
-  box-shadow: inset 0 1px 6px rgba(16,30,65,0.09);
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.15), inset 0 1px 6px rgba(16,30,65,0.09);
+  transform: translateY(-1px);
 }
-
 
 .form-group input.error {
   border-color: var(--danger);
@@ -277,7 +277,7 @@ nav {
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s, transform 0.1s;
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
 }
 
 .btn-primary {
@@ -288,6 +288,8 @@ nav {
 
 .btn-primary:hover {
   background: var(--navy-light);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(26,46,90,0.2);
 }
 
 .btn-primary:active {
@@ -376,9 +378,9 @@ nav {
 .pin-card {
   background: var(--white);
   border: 1.5px solid var(--gray-200);
-  border-radius: 14px;
+  border-radius: 18px;
   overflow: hidden;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -387,10 +389,15 @@ nav {
 }
 
 .pin-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(26,46,90,0.1);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(26,46,90,0.12);
 }
 
+.pin-card:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+/* ── Modal ── */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -400,6 +407,7 @@ nav {
   justify-content: center;
   z-index: 9999;
   padding: 1rem;
+  backdrop-filter: blur(4px);
 }
 
 .modal-overlay.visible {
@@ -415,6 +423,12 @@ nav {
   padding: 1.5rem 2rem 1.5rem 1.5rem;
   position: relative;
   box-shadow: 0 34px 80px rgba(14,24,50,0.22);
+  animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 .modal-close-btn {
@@ -429,6 +443,13 @@ nav {
   color: var(--navy-dark);
   font-size: 1.4rem;
   cursor: pointer;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.modal-close-btn:hover {
+  background: var(--danger);
+  color: var(--white);
+  transform: rotate(90deg);
 }
 
 .modal-pin-header {
@@ -474,6 +495,7 @@ nav {
   font-size: 1rem;
 }
 
+/* ── Pin Image ── */
 .pin-img,
 .pin-image {
   height: 110px;
@@ -517,6 +539,20 @@ nav {
   padding: 4px 10px;
   border-radius: 18px;
   border: 1px solid rgba(26,46,90,0.12);
+  backdrop-filter: blur(4px);
+}
+
+.pin-img-counter {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: rgba(245,200,66,0.95);
+  color: var(--navy-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
 }
 
 .pin-badge {
@@ -658,6 +694,13 @@ nav {
   font-size: 0.875rem;
   outline: none;
   background: var(--white);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.search-wrap input:focus,
+.search-box input:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.12);
 }
 
 /* ── Stats & Pills ── */
@@ -678,6 +721,13 @@ nav {
   font-size: 0.8rem;
   color: var(--gray-600);
   font-weight: 500;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.stat-pill:hover,
+#stats div:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(26,46,90,0.08);
 }
 
 .stat-pill strong,
@@ -829,7 +879,6 @@ nav {
   text-align: center;
 }
 
-
 .map-placeholder i,
 .map-placeholder svg {
   font-size: 3rem;
@@ -845,6 +894,12 @@ nav {
   cursor: pointer;
   font-size: 0.9rem;
   font-family: 'DM Sans', sans-serif;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.filter-select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.12);
 }
 
 /* ── Page Containers ── */
@@ -929,28 +984,28 @@ nav {
   .auth-container {
     padding: 1rem;
   }
-  
+
   .pins-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   nav {
     padding: 0 1rem;
   }
-  
+
   .nav-links {
     gap: 0.25rem;
   }
-  
+
   .nav-btn {
     padding: 6px 12px;
     font-size: 0.8rem;
   }
-  
+
   .pins-header,
   .explore-header {
     flex-direction: column;
@@ -963,7 +1018,7 @@ nav {
   .auth-body {
     padding: 1.5rem 1.25rem 1.75rem;
   }
-  
+
   .pin-img,
   .pin-image {
     height: 160px;
@@ -1087,6 +1142,11 @@ nav {
   justify-content: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   z-index: 2;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pin-head:hover {
+  transform: scale(1.15);
 }
 
 .pin-head i {
@@ -1285,19 +1345,24 @@ nav {
   position: absolute;
   top: -6px;
   right: -6px;
-  background: var(--danger);
-  color: var(--white);
+  background: var(--gold);
+  color: var(--navy-dark);
   font-size: 0.65rem;
   font-weight: 700;
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 2px solid var(--white);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
   z-index: 10;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pin-count-badge:hover {
+  transform: scale(1.2);
 }
 
 /* Adjust custom pin icon for count badge */
@@ -1339,4 +1404,532 @@ nav {
   pointer-events: none;
   letter-spacing: 0.01em;
   font-family: 'DM Sans', sans-serif;
+}
+
+/* ============================================
+   IMAGE UPLOAD STYLES — AdNU Mosaic
+   ============================================ */
+
+.image-upload-area {
+  border: 2px dashed var(--gray-200);
+  border-radius: 14px;
+  padding: 1.5rem;
+  background: var(--surface);
+  transition: border-color 0.2s, background 0.2s, transform 0.15s;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.image-upload-area:hover {
+  border-color: var(--gold);
+  background: rgba(245, 200, 66, 0.04);
+  transform: translateY(-1px);
+}
+
+.image-upload-area.drag-over {
+  border-color: var(--gold);
+  background: rgba(245, 200, 66, 0.12);
+  transform: scale(1.01);
+}
+
+.image-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem 0;
+  color: var(--gray-400);
+  text-align: center;
+}
+
+.image-upload-placeholder i {
+  font-size: 2rem;
+  color: var(--gray-300);
+  transition: color 0.2s, transform 0.2s;
+}
+
+.image-upload-area:hover .image-upload-placeholder i {
+  color: var(--gold);
+  transform: translateY(-2px);
+}
+
+.image-upload-placeholder p {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  margin: 0;
+}
+
+.image-upload-placeholder span {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+}
+
+.image-preview-wrap {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  display: block;
+}
+
+.image-preview-wrap img {
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  display: block;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(184, 50, 50, 0.9);
+  color: var(--white);
+  font-size: 0.85rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.image-remove-btn:hover {
+  transform: scale(1.15) rotate(90deg);
+  background: var(--danger);
+}
+
+.image-upload-progress {
+  margin-top: 0.75rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-100);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 3px;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+
+#progress-text {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--gray-600);
+  margin-top: 0.35rem;
+  text-align: center;
+}
+
+/* Pin card with image background */
+.pin-img[style*="background-image"] {
+  position: relative;
+}
+
+.pin-img[style*="background-image"]::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.4) 100%);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.pin-img[style*="background-image"] .pin-loc-badge {
+  z-index: 2;
+}
+
+/* Modal pin image */
+.modal-pin-image {
+  width: 100%;
+  border-radius: 14px;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.modal-pin-image:hover {
+  transform: scale(1.01);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+/* Responsive image upload */
+@media (max-width: 600px) {
+  .image-upload-area {
+    padding: 1rem;
+  }
+
+  .image-preview-wrap img {
+    max-height: 180px;
+  }
+}
+
+/* ============================================
+   FUN MICRO-INTERACTIONS
+   ============================================ */
+
+/* Floating animation for empty states */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.no-results i,
+.no-results svg {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Subtle page entrance */
+.page.active {
+  animation: pageEnter 0.4s ease;
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Button wiggle on hover */
+.btn-primary:hover {
+  animation: wiggle 0.3s ease;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: translateY(-1px) rotate(0); }
+  25% { transform: translateY(-1px) rotate(-0.5deg); }
+  75% { transform: translateY(-1px) rotate(0.5deg); }
+}
+
+/* Smooth stat pill entrance */
+.stat-pill {
+  animation: pillPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+.stat-pill:nth-child(1) { animation-delay: 0s; }
+.stat-pill:nth-child(2) { animation-delay: 0.1s; }
+.stat-pill:nth-child(3) { animation-delay: 0.2s; }
+
+@keyframes pillPop {
+  from { opacity: 0; transform: scale(0.8) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Card stagger entrance */
+.pins-grid .pin-card {
+  animation: cardPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: scale(0.9) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Input focus glow */
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(245,200,66,0.15), inset 0 1px 6px rgba(16,30,65,0.09);
+  transform: translateY(-1px);
+}
+
+/* Pin card lift on hover */
+.pin-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 12px 32px rgba(26,46,90,0.12);
+}
+
+/* Image viewer fade */
+#image-viewer-overlay {
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Close button spin */
+.modal-close-btn {
+  transition: background 0.15s, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-close-btn:hover {
+  transform: rotate(90deg) scale(1.1);
+}
+
+/* Success message bounce */
+.success-message.show {
+  animation: bounceIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bounceIn {
+  from { opacity: 0; transform: scale(0.8) translateY(-10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Nav button hover glow */
+.nav-btn:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--white);
+  transform: translateY(-1px);
+}
+
+.nav-btn.active {
+  background: rgba(245,200,66,0.15);
+  color: var(--gold);
+  box-shadow: 0 0 12px rgba(245,200,66,0.2);
+}
+
+/* Map pin hover */
+.custom-pin-icon:hover .pin-head {
+  transform: scale(1.2);
+}
+
+/* Upload area bounce on drag */
+.image-upload-area.drag-over {
+  animation: bounce 0.3s ease;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* ============================================
+   MULTIPLE IMAGES & CREATE MODAL STYLES
+   ============================================ */
+
+/* Spinner for image upload */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Create modal specific */
+.create-modal {
+  animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.create-modal .form-section {
+  padding: 0;
+  border: none;
+  box-shadow: none;
+  margin: 0;
+}
+
+/* Image preview grid in create form */
+#images-preview-grid {
+  display: none;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+#images-preview-grid > div {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 2px solid var(--gray-200);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+#images-preview-grid > div:hover {
+  transform: scale(1.05);
+  border-color: var(--gold);
+}
+
+#images-preview-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Carousel in modal */
+.modal-image-carousel {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+
+.modal-image-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.modal-image-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-image-carousel::-webkit-scrollbar-thumb {
+  background: var(--gray-200);
+  border-radius: 3px;
+}
+
+.modal-image-carousel > div {
+  flex-shrink: 0;
+  width: 160px;
+  height: 120px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  cursor: zoom-in;
+  position: relative;
+  border: 2px solid var(--gray-200);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+
+.modal-image-carousel > div:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-color: var(--gold);
+}
+
+/* Multi-image badge on cards */
+.pin-img .fa-images {
+  font-size: 0.75rem;
+  margin-right: 4px;
+}
+
+/* Cancel button styling */
+.btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid var(--gray-200);
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  transform: translateY(-1px);
+}
+
+/* Blur backdrop for create modal */
+#pin-modal-overlay,
+#create-pin-overlay {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Create pin overlay specific */
+#create-pin-overlay {
+  background: rgba(12, 22, 44, 0.55);
+}
+
+/* ============================================
+   MULTIPLE IMAGES & CREATE MODAL
+   ============================================ */
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+#create-pin-overlay {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.create-modal {
+  animation: modalPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#images-preview-grid {
+  display: none;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+#images-preview-grid > div {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 1;
+  border: 2px solid var(--gray-200);
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+#images-preview-grid > div:hover {
+  transform: scale(1.05);
+  border-color: var(--gold);
+}
+
+#images-preview-grid img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-image-carousel {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-200) transparent;
+}
+
+.modal-image-carousel::-webkit-scrollbar {
+  height: 6px;
+}
+
+.modal-image-carousel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.modal-image-carousel::-webkit-scrollbar-thumb {
+  background: var(--gray-200);
+  border-radius: 3px;
+}
+
+.modal-image-carousel > div {
+  flex-shrink: 0;
+  width: 160px;
+  height: 120px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  cursor: zoom-in;
+  position: relative;
+  border: 2px solid var(--gray-200);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+
+.modal-image-carousel > div:hover {
+  transform: scale(1.08);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  border-color: var(--gold);
+}
+
+.btn-secondary {
+  background: var(--gray-100);
+  color: var(--gray-600);
+  border: 1.5px solid var(--gray-200);
+  transition: all 0.15s;
+}
+
+.btn-secondary:hover {
+  background: var(--gray-200);
+  color: var(--gray-800);
+  transform: translateY(-1px);
 }
