@@ -1,16 +1,22 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
 from flask_bcrypt import Bcrypt
+from werkzeug.utils import secure_filename
 import mysql.connector
 from mysql.connector import Error
 from datetime import timedelta
 import os
+import json
 from dotenv import load_dotenv
 
 load_dotenv()
 
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'frontend'))
+UPLOAD_FOLDER = os.path.join(frontend_path, 'uploads')
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 app = Flask(__name__, static_folder=frontend_path, static_url_path='')
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 bcrypt = Bcrypt(app)
@@ -36,6 +42,33 @@ def get_db_connection():
         print(f"Database connection error: {e}")
         return None
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXTENSIONS
+
+@app.route('/api/upload', methods=['POST'])
+def upload_image():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file part in request'}), 400
+
+    file = request.files['file']
+    if not file or file.filename == '':
+        return jsonify({'error': 'No file selected'}), 400
+
+    if not allowed_file(file.filename):
+        return jsonify({'error': 'Invalid image file type'}), 400
+
+    filename = secure_filename(file.filename)
+    name, ext = os.path.splitext(filename)
+    count = 1
+    while os.path.exists(os.path.join(UPLOAD_FOLDER, filename)):
+        filename = f"{name}-{count}{ext}"
+        count += 1
+
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(file_path)
+
+    return jsonify({'url': f'/uploads/{filename}'}), 201
+
 # ==================== AUTHENTICATION ENDPOINTS ====================
 
 @app.route('/api/auth/login', methods=['POST'])
@@ -44,22 +77,22 @@ def admin_login():
     data = request.get_json()
     email = data.get('email')
     password = data.get('password')
-    
+
     if not email or not password:
         return jsonify({'error': 'Email and password required'}), 400
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT user_id, email, password_hash, full_name, role FROM users WHERE email = %s', (email,))
         user = cursor.fetchone()
-        
+
         if not user or not bcrypt.check_password_hash(user['password_hash'], password):
             return jsonify({'error': 'Invalid credentials'}), 401
-        
+
         access_token = create_access_token(identity=user['user_id'])
         return jsonify({
             'access_token': access_token,
@@ -83,16 +116,16 @@ def admin_register():
     email = data.get('email')
     password = data.get('password')
     full_name = data.get('full_name')
-    
+
     if not all([email, password, full_name]):
         return jsonify({'error': 'Email, password, and full name required'}), 400
-    
+
     password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor()
         cursor.execute(
@@ -115,35 +148,45 @@ def get_pins():
     """Get all public pins with optional filtering"""
     location_id = request.args.get('location_id', type=int)
     search = request.args.get('search', '')
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor(dictionary=True)
         query = 'SELECT * FROM pins WHERE visibility = "public"'
         params = []
-        
+
         if location_id:
             query += ' AND location_id = %s'
             params.append(location_id)
-        
+
         if search:
             query += ' AND (title LIKE %s OR content LIKE %s)'
             search_param = f'%{search}%'
             params.extend([search_param, search_param])
-        
+
         query += ' ORDER BY created_at DESC'
         cursor.execute(query, params)
         pins = cursor.fetchall()
-        
-        # Convert datetime objects to strings
+
+        # Parse image_url JSON and convert datetime objects to strings
         for pin in pins:
             if pin['created_at']:
                 pin['created_at'] = pin['created_at'].isoformat()
             if pin['updated_at']:
                 pin['updated_at'] = pin['updated_at'].isoformat()
+            # Handle both single URL strings and JSON arrays
+            if pin['image_url']:
+                try:
+                    # Try to parse as JSON array
+                    pin['image_urls'] = json.loads(pin['image_url'])
+                except (json.JSONDecodeError, TypeError):
+                    # If not JSON, treat as single URL string
+                    pin['image_urls'] = [pin['image_url']] if pin['image_url'] else []
+            else:
+                pin['image_urls'] = []
         
         return jsonify(pins), 200
     except Error as e:
@@ -158,20 +201,29 @@ def get_pin(pin_id):
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM pins WHERE pin_id = %s', (pin_id,))
         pin = cursor.fetchone()
-        
+
         if not pin:
             return jsonify({'error': 'Pin not found'}), 404
-        
+
         if pin['created_at']:
             pin['created_at'] = pin['created_at'].isoformat()
         if pin['updated_at']:
             pin['updated_at'] = pin['updated_at'].isoformat()
         
+        # Parse image_url JSON for multiple images
+        if pin['image_url']:
+            try:
+                pin['image_urls'] = json.loads(pin['image_url'])
+            except (json.JSONDecodeError, TypeError):
+                pin['image_urls'] = [pin['image_url']] if pin['image_url'] else []
+        else:
+            pin['image_urls'] = []
+
         return jsonify(pin), 200
     except Error as e:
         return jsonify({'error': str(e)}), 500
@@ -183,17 +235,28 @@ def get_pin(pin_id):
 def create_pin():
     """Create a new pin"""
     data = request.get_json()
-    
+
     required_fields = ['title', 'content', 'author']
     if not all(field in data for field in required_fields):
         return jsonify({'error': 'Missing required fields'}), 400
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor()
+        # Handle both single image_url and multiple image_urls
+        image_url = data.get('image_url')
+        image_urls = data.get('image_urls', [])
+
+        if image_urls and len(image_urls) > 0:
+            stored_image = json.dumps(image_urls)
+        elif image_url:
+            stored_image = image_url
+        else:
+            stored_image = None
+
         cursor.execute(
             '''INSERT INTO pins (author, title, content, location_id, latitude, longitude, 
                                  location_name, category, visibility, image_url)
@@ -208,7 +271,7 @@ def create_pin():
                 data.get('location_name', 'Campus'),
                 data.get('category', 'campus'),
                 data.get('visibility', 'public'),
-                data.get('image_url')
+                stored_image
             )
         )
         conn.commit()
@@ -226,35 +289,39 @@ def create_pin():
 def update_pin(pin_id):
     """Update an existing pin (admin only)"""
     data = request.get_json()
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor()
-        
+
         # Build dynamic update query
         update_fields = []
         update_values = []
-        
-        for field in ['title', 'content', 'author', 'location_id', 'latitude', 'longitude', 'location_name', 'category', 'visibility']:
+
+        for field in ['title', 'content', 'author', 'location_id', 'latitude', 'longitude', 'location_name', 'category', 'visibility', 'image_url']:
             if field in data:
                 update_fields.append(f'{field} = %s')
                 update_values.append(data[field])
-        
+
+        if 'image_urls' in data:
+            update_fields.append('image_url = %s')
+            update_values.append(json.dumps(data['image_urls']))
+
         if not update_fields:
             return jsonify({'error': 'No fields to update'}), 400
-        
+
         update_values.append(pin_id)
         query = f'UPDATE pins SET {", ".join(update_fields)}, updated_at = CURRENT_TIMESTAMP WHERE pin_id = %s'
-        
+
         cursor.execute(query, update_values)
         conn.commit()
-        
+
         if cursor.rowcount == 0:
             return jsonify({'error': 'Pin not found'}), 404
-        
+
         return jsonify({'message': 'Pin updated successfully'}), 200
     except Error as e:
         conn.rollback()
@@ -270,15 +337,15 @@ def delete_pin(pin_id):
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM pins WHERE pin_id = %s', (pin_id,))
         conn.commit()
-        
+
         if cursor.rowcount == 0:
             return jsonify({'error': 'Pin not found'}), 404
-        
+
         return jsonify({'message': 'Pin deleted successfully'}), 200
     except Error as e:
         conn.rollback()
@@ -295,7 +362,7 @@ def get_locations():
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor(dictionary=True)
         cursor.execute('SELECT * FROM locations ORDER BY location_name')
@@ -307,19 +374,41 @@ def get_locations():
         cursor.close()
         conn.close()
 
+@app.route('/api/locations/<int:location_id>', methods=['GET'])
+def get_location(location_id):
+    """Get a single location by ID with coordinates"""
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({'error': 'Database connection failed'}), 500
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT location_id, location_name, latitude, longitude, description FROM locations WHERE location_id = %s', (location_id,))
+        location = cursor.fetchone()
+
+        if not location:
+            return jsonify({'error': 'Location not found'}), 404
+
+        return jsonify(location), 200
+    except Error as e:
+        return jsonify({'error': str(e)}), 500
+    finally:
+        cursor.close()
+        conn.close()
+
 @app.route('/api/locations', methods=['POST'])
 @jwt_required()
 def create_location():
     """Create a new location (admin only)"""
     data = request.get_json()
-    
+
     if not data.get('location_name'):
         return jsonify({'error': 'Location name required'}), 400
-    
+
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor()
         cursor.execute(
@@ -349,19 +438,19 @@ def get_stats():
     conn = get_db_connection()
     if not conn:
         return jsonify({'error': 'Database connection failed'}), 500
-    
+
     try:
         cursor = conn.cursor(dictionary=True)
-        
+
         cursor.execute('SELECT COUNT(*) as total_pins FROM pins')
         total_pins = cursor.fetchone()['total_pins']
-        
+
         cursor.execute('SELECT COUNT(*) as public_pins FROM pins WHERE visibility = "public"')
         public_pins = cursor.fetchone()['public_pins']
-        
+
         cursor.execute('SELECT COUNT(*) as locations FROM locations')
         locations = cursor.fetchone()['locations']
-        
+
         return jsonify({
             'total_pins': total_pins,
             'public_pins': public_pins,
@@ -391,27 +480,3 @@ def internal_error(e):
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
-
-# Add this endpoint to app.py (after the existing locations endpoints)
-
-@app.route('/api/locations/<int:location_id>', methods=['GET'])
-def get_location(location_id):
-    """Get a single location by ID with coordinates"""
-    conn = get_db_connection()
-    if not conn:
-        return jsonify({'error': 'Database connection failed'}), 500
-    
-    try:
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute('SELECT location_id, location_name, latitude, longitude, description FROM locations WHERE location_id = %s', (location_id,))
-        location = cursor.fetchone()
-        
-        if not location:
-            return jsonify({'error': 'Location not found'}), 404
-        
-        return jsonify(location), 200
-    except Error as e:
-        return jsonify({'error': str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
