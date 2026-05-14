@@ -18,6 +18,8 @@
   --gold-light: #fde97a;
   --white: #ffffff;
   --off-white: #f8f7f4;
+  --surface: rgba(255,255,255,0.92);
+  --surface-strong: rgba(255,255,255,0.98);
   --gray-100: #f0eff0;
   --gray-200: #e0dee0;
   --gray-400: #9e9c9e;
@@ -31,10 +33,12 @@
 
 body {
   font-family: 'DM Sans', sans-serif;
-  background: var(--off-white);
+  background: radial-gradient(circle at top left, rgba(245,200,66,0.08), transparent 24%),
+              linear-gradient(180deg, #f8f7f4 0%, #eef1f4 100%);
   color: var(--gray-800);
   min-height: 100vh;
 }
+
 
 /* ── Typography ── */
 h1, h2, .auth-logo, .loading-logo, .nav-logo {
@@ -228,22 +232,25 @@ nav {
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 10px 13px;
+  padding: 12px 14px;
   border: 1.5px solid var(--gray-200);
-  border-radius: 9px;
+  border-radius: 12px;
   font-family: 'DM Sans', sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: var(--gray-800);
-  background: var(--white);
+  background: var(--surface);
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  box-shadow: inset 0 1px 4px rgba(16,30,65,0.06);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   border-color: var(--navy-light);
+  box-shadow: inset 0 1px 6px rgba(16,30,65,0.09);
 }
+
 
 .form-group input.error {
   border-color: var(--danger);
@@ -382,8 +389,8 @@ nav {
 
 .pin-img,
 .pin-image {
-  height: 140px;
-  background: var(--navy);
+  height: 108px;
+  background: linear-gradient(180deg, rgba(26,46,90,0.95) 0%, rgba(26,46,90,0.72) 100%);
   position: relative;
   overflow: hidden;
   display: flex;
@@ -391,11 +398,25 @@ nav {
   justify-content: center;
 }
 
+.pin-img::after,
+.pin-image::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.08), transparent 38%);
+  pointer-events: none;
+}
+
 .pin-img svg,
+.pin-img i,
 .pin-image i,
 .pin-image svg {
-  opacity: 0.2;
+  opacity: 0.16;
   color: var(--white);
+}
+
+.pin-img i {
+  font-size: 1.2rem;
 }
 
 .pin-loc-badge,
@@ -403,12 +424,13 @@ nav {
   position: absolute;
   bottom: 10px;
   left: 12px;
-  background: rgba(10,18,40,0.75);
-  color: var(--gold-light);
+  background: rgba(255,255,255,0.92);
+  color: var(--navy-dark);
   font-size: 0.72rem;
   font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 20px;
+  padding: 4px 10px;
+  border-radius: 18px;
+  border: 1px solid rgba(26,46,90,0.12);
 }
 
 .pin-badge {
@@ -708,20 +730,22 @@ nav {
 .map-container {
   width: 100%;
   height: 500px;
-  border-radius: 12px;
-  border: 1.5px solid var(--gray-200);
+  border-radius: 18px;
+  border: 1px solid rgba(26,46,90,0.12);
   margin-bottom: 2rem;
   overflow: hidden;
-  background: #f0f0f0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(248,247,244,0.72));
   display: flex;
   align-items: center;
   justify-content: center;
   color: var(--gray-400);
+  box-shadow: 0 24px 60px rgba(26,46,90,0.06);
 }
 
 .map-placeholder {
   text-align: center;
 }
+
 
 .map-placeholder i,
 .map-placeholder svg {
@@ -799,11 +823,12 @@ nav {
 
 /* ── Form Section (Create Pin) ── */
 .form-section {
-  background: var(--white);
-  border: 1.5px solid var(--gray-200);
-  border-radius: 12px;
+  background: var(--surface-strong);
+  border: 1px solid rgba(26,46,90,0.08);
+  border-radius: 18px;
   padding: 2rem;
   margin-bottom: 2rem;
+  box-shadow: 0 24px 60px rgba(26,46,90,0.08);
 }
 
 .form-section h2 {
@@ -904,7 +929,7 @@ nav {
   width: 100%;
   height: 100%;
   z-index: 1;
-  background: #e8e4df;
+  background: radial-gradient(circle at top, rgba(255,255,255,0.9), rgba(255,255,255,0.75) 35%, rgba(216,227,235,0.4));
 }
 
 .leaflet-popup-content-wrapper {
@@ -1020,13 +1045,13 @@ nav {
   position: absolute;
   bottom: 20px;
   left: 20px;
-  background: rgba(255,255,255,0.95);
-  padding: 12px 16px;
-  border-radius: 10px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+  background: rgba(255,255,255,0.92);
+  padding: 14px 18px;
+  border-radius: 16px;
+  box-shadow: 0 20px 50px rgba(12,22,44,0.16);
   z-index: 500;
   font-size: 0.8rem;
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(10px);
 }
 
 .map-legend-title {
@@ -1066,15 +1091,15 @@ nav {
 
 /* Campus boundary label */
 .campus-label {
-  background: rgba(26, 46, 90, 0.9);
+  background: rgba(12, 22, 44, 0.75);
   color: var(--gold);
-  padding: 6px 16px;
-  border-radius: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
   font-size: 0.85rem;
   font-weight: 600;
-  border: 1.5px solid var(--gold);
+  border: 1px solid rgba(245,200,66,0.35);
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
   letter-spacing: 0.02em;
 }
 
@@ -1158,16 +1183,16 @@ nav {
 }
 
 .location-label {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--navy-dark);
-  padding: 2px 8px;
+  background: transparent;
+  color: var(--white);
+  padding: 0 4px;
   border-radius: 4px;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 700;
   white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(255,255,255,0.8);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
-  border: 1px solid rgba(26, 46, 90, 0.2);
+  text-shadow: 0 0 8px rgba(0,0,0,0.8);
+  box-shadow: none;
+  border: none;
   pointer-events: none;
   letter-spacing: 0.02em;
 }
